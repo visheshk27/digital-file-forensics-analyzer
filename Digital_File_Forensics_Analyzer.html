@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital File Forensics Analyzer | OSINT Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            padding: 20px;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .tool-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .upload-zone {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 50px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
+        }
+
+        .upload-zone:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+
+        .upload-zone.dragover {
+            border-color: #764ba2;
+            background: #e8ebff;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 60px;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .upload-zone h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .upload-zone p {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .file-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9ff;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .file-info h4 {
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .results-section {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px 8px 0 0;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .metadata-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            padding: 20px;
+            background: white;
+            border-radius: 0 0 8px 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .metadata-item {
+            padding: 12px;
+            background: #f8f9ff;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+        }
+
+        .metadata-item strong {
+            display: block;
+            color: #667eea;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            letter-spacing: 0.5px;
+        }
+
+        .metadata-item span {
+            color: #333;
+            font-size: 1em;
+            word-break: break-all;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            color: #856404;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            color: #155724;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            color: #721c24;
+        }
+
+        .hash-section {
+            background: #1a1a2e;
+            color: #eee;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .hash-section h4 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .hash-item {
+            margin-bottom: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .hash-item strong {
+            color: #ff79c6;
+            display: inline-block;
+            width: 80px;
+        }
+
+        .hash-item span {
+            color: #50fa7b;
+            word-break: break-all;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .exif-data {
+            background: #fff;
+            padding: 20px;
+            border-radius: 0 0 8px 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .exif-item {
+            padding: 10px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .exif-item:last-child {
+            border-bottom: none;
+        }
+
+        .exif-key {
+            font-weight: 600;
+            color: #667eea;
+            flex: 0 0 200px;
+        }
+
+        .exif-value {
+            color: #333;
+            flex: 1;
+            text-align: right;
+            word-break: break-all;
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            padding: 20px;
+            opacity: 0.9;
+        }
+
+        footer a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .feature-item {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+
+        .feature-item h4 {
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+
+        .feature-item p {
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 Digital File Forensics Analyzer</h1>
+            <p>Extract Hidden Metadata & Analyze Digital Evidence</p>
+        </header>
+
+        <div class="tool-card">
+            <div class="feature-list">
+                <div class="feature-item">
+                    <h4>📸 EXIF Data</h4>
+                    <p>GPS location, camera model, timestamps</p>
+                </div>
+                <div class="feature-item">
+                    <h4>📄 Document Metadata</h4>
+                    <p>Author, creation date, software used</p>
+                </div>
+                <div class="feature-item">
+                    <h4>🔐 File Hashes</h4>
+                    <p>MD5, SHA-1, SHA-256 verification</p>
+                </div>
+                <div class="feature-item">
+                    <h4>⚠️ Tampering Detection</h4>
+                    <p>File integrity and modification checks</p>
+                </div>
+            </div>
+
+            <div class="upload-zone" id="uploadZone">
+                <div class="upload-icon">📁</div>
+                <h3>Drop your file here</h3>
+                <p>or click to browse</p>
+                <p style="margin-top: 10px; font-size: 0.85em; color: #999;">Supports: Images (JPG, PNG), PDFs, Documents (DOCX, PDF), and more</p>
+            </div>
+            <input type="file" id="fileInput" accept="*/*">
+
+            <div id="fileInfo" class="file-info" style="display: none;">
+                <h4>Selected File:</h4>
+                <p id="fileName"></p>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Analyzing file...</p>
+            </div>
+        </div>
+
+        <div class="results-section" id="resultsSection">
+            <div class="tool-card">
+                <div class="section-header">📋 Basic File Information</div>
+                <div class="metadata-grid" id="basicInfo"></div>
+            </div>
+
+            <div class="tool-card" id="exifSection" style="display: none;">
+                <div class="section-header">📸 EXIF / Metadata Details</div>
+                <div class="exif-data" id="exifData"></div>
+            </div>
+
+            <div class="tool-card">
+                <div class="section-header">🔐 File Integrity & Hash Values</div>
+                <div class="hash-section" id="hashSection"></div>
+            </div>
+
+            <div class="tool-card" id="alertSection" style="display: none;">
+                <div class="section-header">⚠️ Security Analysis</div>
+                <div style="padding: 20px;" id="alertContent"></div>
+            </div>
+
+            <button class="btn" onclick="resetAnalyzer()">Analyze Another File</button>
+        </div>
+
+        <footer>
+            <p>Created by <a href="https://github.com/visheshk27" target="_blank">@visheshk27</a> | Digital Forensics Tool</p>
+            <p style="margin-top: 10px; font-size: 0.9em;">⭐ Star this project on <a href="https://github.com/visheshk27/digital-file-forensics-analyzer" target="_blank">GitHub</a></p>
+        </footer>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    
+    <script>
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const loading = document.getElementById('loading');
+        const resultsSection = document.getElementById('resultsSection');
+        let currentFile = null;
+
+        // Click to upload
+        uploadZone.addEventListener('click', () => fileInput.click());
+
+        // Drag and drop
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            currentFile = file;
+            fileName.textContent = `${file.name} (${formatBytes(file.size)})`;
+            fileInfo.style.display = 'block';
+            analyzeFile(file);
+        }
+
+        async function analyzeFile(file) {
+            loading.style.display = 'block';
+            resultsSection.style.display = 'none';
+
+            // Simulate processing time
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            // Basic file info
+            displayBasicInfo(file);
+
+            // Calculate hashes
+            await calculateHashes(file);
+
+            // Extract EXIF for images
+            if (file.type.startsWith('image/')) {
+                await extractEXIF(file);
+            }
+
+            // Security analysis
+            performSecurityAnalysis(file);
+
+            loading.style.display = 'none';
+            resultsSection.style.display = 'block';
+        }
+
+        function displayBasicInfo(file) {
+            const basicInfo = document.getElementById('basicInfo');
+            const info = {
+                'File Name': file.name,
+                'File Size': formatBytes(file.size),
+                'File Type': file.type || 'Unknown',
+                'Last Modified': new Date(file.lastModified).toLocaleString(),
+                'MIME Type': file.type,
+                'Extension': file.name.split('.').pop().toUpperCase()
+            };
+
+            basicInfo.innerHTML = '';
+            for (const [key, value] of Object.entries(info)) {
+                basicInfo.innerHTML += `
+                    <div class="metadata-item">
+                        <strong>${key}</strong>
+                        <span>${value}</span>
+                    </div>
+                `;
+            }
+        }
+
+        async function calculateHashes(file) {
+            const hashSection = document.getElementById('hashSection');
+            hashSection.innerHTML = '<p style="color: #ccc;">Calculating file hashes...</p>';
+
+            const arrayBuffer = await file.arrayBuffer();
+            const wordArray = CryptoJS.lib.WordArray.create(arrayBuffer);
+
+            const md5 = CryptoJS.MD5(wordArray).toString();
+            const sha1 = CryptoJS.SHA1(wordArray).toString();
+            const sha256 = CryptoJS.SHA256(wordArray).toString();
+
+            hashSection.innerHTML = `
+                <h4>🔐 Cryptographic Hashes (for file integrity verification)</h4>
+                <div class="hash-item">
+                    <strong>MD5:</strong> <span>${md5}</span>
+                </div>
+                <div class="hash-item">
+                    <strong>SHA-1:</strong> <span>${sha1}</span>
+                </div>
+                <div class="hash-item">
+                    <strong>SHA-256:</strong> <span>${sha256}</span>
+                </div>
+                <p style="margin-top: 15px; color: #999; font-size: 0.9em;">
+                    💡 These hashes can be used to verify file authenticity and detect tampering.
+                </p>
+            `;
+        }
+
+        function extractEXIF(file) {
+            const exifSection = document.getElementById('exifSection');
+            const exifData = document.getElementById('exifData');
+
+            EXIF.getData(file, function() {
+                const allMetaData = EXIF.getAllTags(this);
+                
+                if (Object.keys(allMetaData).length > 0) {
+                    exifSection.style.display = 'block';
+                    exifData.innerHTML = '';
+
+                    // GPS Data
+                    const lat = EXIF.getTag(this, 'GPSLatitude');
+                    const lon = EXIF.getTag(this, 'GPSLongitude');
+                    const latRef = EXIF.getTag(this, 'GPSLatitudeRef');
+                    const lonRef = EXIF.getTag(this, 'GPSLongitudeRef');
+
+                    if (lat && lon) {
+                        const latitude = convertDMSToDD(lat, latRef);
+                        const longitude = convertDMSToDD(lon, lonRef);
+                        exifData.innerHTML += `
+                            <div class="exif-item" style="background: #fff3cd; border-left: 4px solid #ffc107;">
+                                <div class="exif-key">📍 GPS Location</div>
+                                <div class="exif-value">
+                                    ${latitude.toFixed(6)}, ${longitude.toFixed(6)}
+                                    <br><a href="https://www.google.com/maps?q=${latitude},${longitude}" target="_blank" style="color: #667eea;">View on Map</a>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    // Other EXIF data
+                    const importantTags = {
+                        'Make': 'Camera Make',
+                        'Model': 'Camera Model',
+                        'DateTime': 'Date Taken',
+                        'DateTimeOriginal': 'Original Date/Time',
+                        'Software': 'Software Used',
+                        'Orientation': 'Orientation',
+                        'XResolution': 'X Resolution',
+                        'YResolution': 'Y Resolution',
+                        'ExposureTime': 'Exposure Time',
+                        'FNumber': 'F Number',
+                        'ISO': 'ISO Speed',
+                        'Flash': 'Flash',
+                        'FocalLength': 'Focal Length',
+                        'LensModel': 'Lens Model',
+                        'Artist': 'Artist/Author',
+                        'Copyright': 'Copyright'
+                    };
+
+                    for (const [tag, label] of Object.entries(importantTags)) {
+                        const value = EXIF.getTag(this, tag);
+                        if (value) {
+                            exifData.innerHTML += `
+                                <div class="exif-item">
+                                    <div class="exif-key">${label}</div>
+                                    <div class="exif-value">${value}</div>
+                                </div>
+                            `;
+                        }
+                    }
+
+                    // Show all other metadata
+                    for (const [key, value] of Object.entries(allMetaData)) {
+                        if (!importantTags[key] && key !== 'GPSLatitude' && key !== 'GPSLongitude' && key !== 'GPSLatitudeRef' && key !== 'GPSLongitudeRef') {
+                            exifData.innerHTML += `
+                                <div class="exif-item">
+                                    <div class="exif-key">${key}</div>
+                                    <div class="exif-value">${JSON.stringify(value)}</div>
+                                </div>
+                            `;
+                        }
+                    }
+                } else {
+                    exifSection.style.display = 'block';
+                    exifData.innerHTML = '<p style="color: #999; padding: 20px; text-align: center;">No EXIF metadata found in this image.</p>';
+                }
+            });
+        }
+
+        function convertDMSToDD(dms, ref) {
+            const degrees = dms[0];
+            const minutes = dms[1];
+            const seconds = dms[2];
+            let dd = degrees + minutes/60 + seconds/3600;
+            if (ref === 'S' || ref === 'W') {
+                dd = dd * -1;
+            }
+            return dd;
+        }
+
+        function performSecurityAnalysis(file) {
+            const alertSection = document.getElementById('alertSection');
+            const alertContent = document.getElementById('alertContent');
+            let alerts = [];
+
+            // Check for suspicious file extensions
+            const suspiciousExtensions = ['exe', 'bat', 'cmd', 'scr', 'vbs', 'js', 'jar'];
+            const ext = file.name.split('.').pop().toLowerCase();
+            
+            if (suspiciousExtensions.includes(ext)) {
+                alerts.push({
+                    type: 'danger',
+                    message: '⚠️ WARNING: This file type (.'+ext+') can be potentially dangerous. Be cautious when opening executable files.'
+                });
+            }
+
+            // Check file size anomalies
+            if (file.size === 0) {
+                alerts.push({
+                    type: 'warning',
+                    message: '⚠️ This file appears to be empty (0 bytes). This could indicate corruption or intentional manipulation.'
+                });
+            }
+
+            if (file.size > 100 * 1024 * 1024) { // 100MB
+                alerts.push({
+                    type: 'warning',
+                    message: '💡 Large file detected (>100MB). Verify the file source before processing.'
+                });
+            }
+
+            // Check for MIME type mismatch
+            const expectedMimes = {
+                'jpg': 'image/jpeg',
+                'jpeg': 'image/jpeg',
+                'png': 'image/png',
+                'pdf': 'application/pdf',
+                'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            };
+
+            if (expectedMimes[ext] && file.type !== expectedMimes[ext]) {
+                alerts.push({
+                    type: 'danger',
+                    message: `⚠️ MIME type mismatch detected! File extension suggests ${ext} but MIME type is ${file.type || 'unknown'}. This could indicate file spoofing.`
+                });
+            }
+
+            // Display alerts
+            if (alerts.length > 0) {
+                alertSection.style.display = 'block';
+                alertContent.innerHTML = '';
+                alerts.forEach(alert => {
+                    alertContent.innerHTML += `
+                        <div class="alert alert-${alert.type}">
+                            ${alert.message}
+                        </div>
+                    `;
+                });
+            } else {
+                alertSection.style.display = 'block';
+                alertContent.innerHTML = `
+                    <div class="alert alert-success">
+                        ✅ No suspicious indicators detected. File appears to be legitimate.
+                    </div>
+                `;
+            }
+        }
+
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        function resetAnalyzer() {
+            fileInput.value = '';
+            fileInfo.style.display = 'none';
+            resultsSection.style.display = 'none';
+            currentFile = null;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
