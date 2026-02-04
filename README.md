@@ -8,7 +8,7 @@ A powerful web-based tool for digital forensics and OSINT investigations. Extrac
 
 ## 🌟 Live Demo
 
-👉 **[Try it now!](https://visheshk27.github.io/digital-file-forensics-analyzer/)**
+👉 **[Try it now! CLICK HERE TWICE! ](https://visheshk27.github.io/digital-file-forensics-analyzer/)**
 
 ## ✨ Features
 
